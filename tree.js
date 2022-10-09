@@ -4,7 +4,6 @@ const ADDITION = "+";
 const SUBSTRACTION = "-";
 const MULTIPLACTION = "x";
 const DIVISION = "÷";
-const EMPTY = "";
 
 const Addition = function(left, right){
     this.result = () => left.result() + right.result();
@@ -26,13 +25,8 @@ const Division = function(left, right){
     this.toString = () => `(${left.toString()} ${DIVISION} ${right.toString()})`
 }
 
-const DefaultOperator = function(value){
-    this.result = () => value;
-    this.toString = () => value.toString();
-}
-
 const OperatorFactory = function(){
-    this.createOperator = (operator, value, left, right) => {
+    this.createOperator = (operator, left, right) => {
         switch (operator) {
             case ADDITION:
               return new Addition(left, right);
@@ -42,37 +36,36 @@ const OperatorFactory = function(){
               return new Multiplaction(left, right);
             case DIVISION:
               return new Division(left, right);
-            default:
-              return new DefaultOperator(value);
           }
     }
 } 
 
-const Node = (operator, value, left = null, right = null) => {
+const OperatorNode = (operator, left, right) => {
   const operatorFactory = new OperatorFactory();
   
-  return operatorFactory.createOperator(operator, value, left, right);
+  return operatorFactory.createOperator(operator, left, right);
 };
 
-const tree = Node(
+const ValueNode = (value) => {
+    const toString = () => value.toString();
+    const result = () => value;
+
+    return { toString, result };
+}
+
+const tree = OperatorNode(
   DIVISION,
-  null,
-  Node(
+  OperatorNode(
     ADDITION,
-    null,
-    Node(EMPTY, 7),
-    Node(
+    ValueNode(7),
+    OperatorNode(
       MULTIPLACTION,
-      null,
-      Node(SUBSTRACTION, null, Node(EMPTY, 3), Node(EMPTY, 2)),
-      Node(EMPTY, 5)
+      OperatorNode(SUBSTRACTION, ValueNode(3), ValueNode(2)),
+      ValueNode(5)
     )
   ),
-  Node(EMPTY, 6)
+  ValueNode(6)
 );
 
 assert.strictEqual("((7 + ((3 - 2) x 5)) ÷ 6)", tree.toString());
 assert.strictEqual(2, tree.result());
-
-console.log(tree.toString())
-console.log(tree.result())
